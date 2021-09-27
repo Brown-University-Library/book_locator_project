@@ -37,7 +37,7 @@ logging.basicConfig(
     )
 logging.getLogger("oauth2client").setLevel(logging.WARNING)
 log = logging.getLogger( 'book_locator_indexer' )
-log.info( 'starting index...' )
+log.info( '\n\nstarting index...' )
 
 
 try:

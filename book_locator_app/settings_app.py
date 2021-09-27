@@ -26,12 +26,34 @@ log.debug( f'DATA_DIR, ```{DATA_DIR}``' )
 
 GSHEET_KEY_PATH = os.environ['BK_LCTR__GSHEET_KEY_PATH']
 
-## misleading var names; these are really the spreadsheet keys; a 'gid' represents an individual worksheets of the spreadsheet
+## misleading var names; these are really the spreadsheet keys; a 'gid' represents an individual worksheet of the spreadsheet
 ROCK_GID = os.environ['BK_LCTR__ROCK_GID']
 SCI_GID = os.environ['BK_LCTR__SCI_GID']
 ROCK_CHINESE_GID = os.environ['BK_LCTR__ROCK_CHINESE_GID']
 ROCK_JAPANESE_GID = os.environ['BK_LCTR__ROCK_JAPANESE_GID']
 ROCK_KOREAN_GID = os.environ['BK_LCTR__ROCK_KOREAN_GID']
+
+## new-2021 g-sheet IDs...
+ROCK_GENERAL_SPREADSHEET_ID = os.environ['BK_LCTR__ROCK_SPREADSHEET_ID']
+SCI_SPREADSHEET_ID = os.environ['BK_LCTR__SCI_SPREADSHEET_ID']
+ROCK_CJK_SPREADSHEET_ID = os.environ['BK_LCTR__CJK_SPREADSHEET_ID']
+#---
+ROCK_GENERAL_FLOOR_A_WORKSHEET_ID = os.environ['BK_LCTR__ROCK_GENERAL_FLOOR_A_WORKSHEET_ID']
+ROCK_GENERAL_FLOOR_B_WORKSHEET_ID = os.environ['BK_LCTR__ROCK_GENERAL_FLOOR_B_WORKSHEET_ID']
+ROCK_GENERAL_FLOOR_2_WORKSHEET_ID = os.environ['BK_LCTR__ROCK_GENERAL_FLOOR_2_WORKSHEET_ID']
+ROCK_GENERAL_FLOOR_3_WORKSHEET_ID = os.environ['BK_LCTR__ROCK_GENERAL_FLOOR_3_WORKSHEET_ID']
+ROCK_GENERAL_FLOOR_4_WORKSHEET_ID = os.environ['BK_LCTR__ROCK_GENERAL_FLOOR_4_WORKSHEET_ID']
+#---
+SCI_FLOOR_11_WORKSHEET_ID = os.environ['BK_LCTR__SCI_FLOOR_11_WORKSHEET_ID']
+SCI_FLOOR_12_WORKSHEET_ID = os.environ['BK_LCTR__SCI_FLOOR_12_WORKSHEET_ID']
+SCI_FLOOR_13_WORKSHEET_ID = os.environ['BK_LCTR__SCI_FLOOR_13_WORKSHEET_ID']
+#---
+CHINESE_WORKSHEET_ID = os.environ['BK_LCTR__CHINESE_WORKSHEET_ID']
+JAPANESE_WORKSHEET_ID = os.environ['BK_LCTR__JAPANESE_WORKSHEET_ID']
+KOREAN_WORKSHEET_ID = os.environ['BK_LCTR__KOREAN_WORKSHEET_ID']
+
+#---
+#---
 
 META_FILEPATH = os.environ['BK_LCTR__META_PICKLE_FILEPATH']
 

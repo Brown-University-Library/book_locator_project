@@ -30,10 +30,32 @@ class Indexer():
 
     def __init__( self ):
         log.debug( 'starting ``__init__()' )
-        self.groups = self.prepare_groups()
+        self.raw_groups = self.prepare_groups()
+        self.spreadsheet_group_json_urls = self.prepare_spreadsheet_urls( self.raw_groups )
+
+    def prepare_spreadsheet_urls( self, raw_groups ):
+        """ Populates Indexer.spreadsheet_urls on instantiation.
+            Called by __init__() """
+        assert type( raw_groups ) == list
+        spreadsheet_group_json_urls = []
+        for group in raw_groups:
+            assert type(group) == dict
+            spreadsheet_id = group['spreadsheet_id']
+            json_urls = []
+            for worksheet_id in group['worksheet_ids']:
+                json_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq?tqx=out:json&gid={worksheet_id}'
+                json_urls.append( json_url )
+            dct = {
+                'location_code': group['location_code'],
+                'group_json_urls': json_urls
+            }
+            spreadsheet_group_json_urls.append( dct )
+        return spreadsheet_group_json_urls
 
     def prepare_groups( self ):
-        groups = [
+        """ Populates Indexer.groups on instantiation.
+            Called by __init__() """
+        raw_groups = [
             {
                 'location_code': 'rock',
                 'spreadsheet_id': settings_app.ROCK_GENERAL_SPREADSHEET_ID,
@@ -76,7 +98,7 @@ class Indexer():
                 ]
             },
         ]
-        return groups
+        return raw_groups
 
 
     ## end class Indexer()
@@ -87,7 +109,8 @@ class Indexer():
 def main():
     log.debug( 'starting `def main()`' )
     indexer = Indexer()
-    log.debug( f'groups, ``{pprint.pformat( indexer.groups )}``' )
+    log.debug( f'raw_groups, ``{pprint.pformat( indexer.raw_groups )}``' )
+    log.debug( f'spreadsheet_group_json_urls, ``{pprint.pformat( indexer.spreadsheet_group_json_urls )}``' )
 
 if __name__ == "__main__":
     log.debug( 'starting `if __name__...`' )

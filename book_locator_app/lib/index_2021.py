@@ -25,12 +25,27 @@ log = logging.getLogger( 'book_locator_indexer' )
 log.info( '\n\nstarting index_2021.py...' )
 
 
+## Row ------------------------------------------
+
+# class Row():
+
+#     def __init__( self ):
+#         log.debug( 'starting Row.__init__()' )
+#         self.aisle = ''
+#         self.begin = ''
+#         self.end = ''
+#         self.floor = ''
+#         self.location_code = ''
+
+#     ## end class Row()
+
+
 ## Indexer --------------------------------------
 
 class Indexer():
 
     def __init__( self ):
-        log.debug( 'starting __init__()' )
+        log.debug( 'starting Indexer.__init__()' )
         self.raw_groups = self.prepare_groups()
         self.spreadsheet_group_json_urls = self.prepare_spreadsheet_urls( self.raw_groups )
         self.all_raw_json_data = []
@@ -62,7 +77,81 @@ class Indexer():
                 raw_json_data.append( jsn_obj )
             break
         # log.debug( f'raw_json_data, ``{raw_json_data}``' )
+        assert type( raw_json_data ) == list
         return raw_json_data
+
+    def organize_json( self ):
+        """ Converts self.all_raw_json_data list-data into row-data for each spreadsheet.
+            Called by main() """
+        log.debug( 'starting organize_json()' )
+        # log.debug( f'self.all_raw_json_data, ``{pprint.pformat(self.all_raw_json_data)}``' )
+        # 1/0
+        assert type( self.all_raw_json_data ) == list
+        for worksheet in self.all_raw_json_data:
+            assert type( worksheet ) == dict
+            log.debug( f'processing worksheet, ``{pprint.pformat(worksheet)}...``' )
+            log.debug( f'worksheet.keys(), ``{pprint.pformat(worksheet.keys())}``' )
+            log.debug( f'worksheet["table"], ``{worksheet["table"]}``' )
+            # 1/0
+            table = worksheet['table']
+            assert type( table ) == dict
+            log.debug( f'table-keys, ``{pprint.pformat(table.keys())}``' )
+            # 1/0
+            second_row_table_identifier = table['rows'][2]
+            log.debug( f'processing table containing, ``{second_row_table_identifier}``' )
+            row_list = []
+            for row in table['rows']:
+                cells = row['c']
+                first_cell_data = cells[0]['v']
+                log.debug( f'first_cell_data, ``{first_cell_data}``' )
+                if first_cell_data == 'aisle':
+                    continue
+                row_dct = {
+                    'aisle': '', 'begin': '', 'end': '', 'floor': '', 'location_code': '' }
+                for ( i, cell ) in enumerate( cells ):
+                    if i == 0:
+                        row_dct['aisle'] = cell['v']
+                    elif i == 1:
+                        row_dct['begin'] = cell['v']
+                    elif i == 2:
+                        row_dct['end'] = cell['v']         # /floor/location_code
+                    elif i == 3:
+                        try:
+                            row_dct['floor'] = cell['f']
+                        except:
+                            row_dct['floor'] = cell['v']
+                    elif i == 4:
+                        row_dct['location_code'] = cell['v']
+                    elif i > 4:
+                        break
+                row_list.append( row_dct )
+            last_entry = row_list[-1]
+            if last_entry['location_code'].strip() == 'rock':
+                if last_entry['floor'].strip() == 'A':
+                    self.rock_general_floor_a_data = row_list
+                elif last_entry['floor'].strip() == 'B':
+                    self.rock_general_floor_b_data = row_list
+                elif last_entry['floor'].strip() == '2':
+                    self.rock_general_floor_2_data = row_list
+                elif last_entry['floor'].strip() == '3':
+                    self.rock_general_floor_3_data = row_list
+                elif last_entry['floor'].strip() == '4':
+                    self.rock_general_floor_4_data = row_list
+            elif last_entry['location_code'].strip() == 'sci':
+                if last_entry['floor'].strip() == '11':
+                    self.sci_general_floor_11_data = row_list
+                elif last_entry['floor'].strip() == '12':
+                    self.sci_general_floor_12_data = row_list
+                elif last_entry['floor'].strip() == '13':
+                    self.sci_general_floor_13_data = row_list
+            elif last_entry['location_code'].strip() == 'rock chinese':
+                self.chinese_data = row_list
+            elif last_entry['location_code'].strip() == 'rock japanese':
+                self.japanese_data = row_list
+            elif last_entry['location_code'].strip() == 'rock korean':
+                self.korean_data = row_list
+        log.debug( f'self.rock_general_floor_a_data, ``{pprint.pformat(self.rock_general_floor_a_data)}``' )
+        ## end def organize_json()
 
     def query_spreadsheet( self, worksheet_url ):
         """ Queries spreadsheet.
@@ -76,7 +165,7 @@ class Indexer():
         end_position = len( ');' )
         jsn_str = content[start_position: -end_position]
         jsn_obj = json.loads( jsn_str )
-        log.debug( f'jsn_obj, ``{pprint.pformat( jsn_obj )}``' )
+        # log.debug( f'jsn_obj, ``{pprint.pformat( jsn_obj )}``' )
         return jsn_obj
 
     def prepare_spreadsheet_urls( self, raw_groups ):
@@ -158,6 +247,7 @@ def main():
     indexer = Indexer()
     log.debug( f'indexer.spreadsheet_group_json_urls, ``{pprint.pformat(indexer.spreadsheet_group_json_urls)}``' )
     indexer.all_raw_json_data = indexer.access_worksheet_json()
+    indexer.all_worksheet_data = indexer.organize_json()
     # indexer.populate_worksheet_data()
 
 if __name__ == "__main__":

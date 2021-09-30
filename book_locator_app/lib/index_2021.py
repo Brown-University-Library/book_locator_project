@@ -73,8 +73,9 @@ class Indexer():
             worksheet_urls = entry['group_json_urls']
             for worksheet_url in worksheet_urls:
                 assert type(worksheet_url) == str
-                jsn_obj = self.query_spreadsheet( worksheet_url )
-                raw_json_data.append( jsn_obj )
+                jsn_dct = self.query_spreadsheet( worksheet_url )
+                jsn_dct['queried_url'] = worksheet_url
+                raw_json_data.append( jsn_dct )
             break
         # log.debug( f'raw_json_data, ``{raw_json_data}``' )
         assert type( raw_json_data ) == list
@@ -164,9 +165,9 @@ class Indexer():
         start_position = content.find( start_string ) + len( start_string )
         end_position = len( ');' )
         jsn_str = content[start_position: -end_position]
-        jsn_obj = json.loads( jsn_str )
-        # log.debug( f'jsn_obj, ``{pprint.pformat( jsn_obj )}``' )
-        return jsn_obj
+        jsn_dct = json.loads( jsn_str )
+        # log.debug( f'jsn_dct, ``{pprint.pformat( jsn_dct )}``' )
+        return jsn_dct
 
     def prepare_spreadsheet_urls( self, raw_groups ):
         """ Populates Indexer.spreadsheet_urls on instantiation.
@@ -196,46 +197,95 @@ class Indexer():
             {
                 'location_code': 'rock',
                 'spreadsheet_id': settings_app.ROCK_GENERAL_SPREADSHEET_ID,
-                'worksheet_ids': [
-                    settings_app.ROCK_GENERAL_FLOOR_A_WORKSHEET_ID,
-                    settings_app.ROCK_GENERAL_FLOOR_B_WORKSHEET_ID,
-                    settings_app.ROCK_GENERAL_FLOOR_2_WORKSHEET_ID,
-                    settings_app.ROCK_GENERAL_FLOOR_3_WORKSHEET_ID,
-                    settings_app.ROCK_GENERAL_FLOOR_4_WORKSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_A_WORKSHEET_ID, 'label': 'rock_general_floor_a' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_B_WORKSHEET_ID, 'label': 'rock_general_floor_b' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_2_WORKSHEET_ID, 'label': 'rock_general_floor_2' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_3_WORKSHEET_ID, 'label': 'rock_general_floor_3' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_4_WORKSHEET_ID, 'label': 'rock_general_floor_4' }
                 ]
             },
             {
                 'location_code': 'sci',
                 'spreadsheet_id': settings_app.SCI_SPREADSHEET_ID,
-                'worksheet_ids': [
-                    settings_app.SCI_FLOOR_11_WORKSHEET_ID,
-                    settings_app.SCI_FLOOR_12_WORKSHEET_ID,
-                    settings_app.SCI_FLOOR_13_WORKSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.SCI_FLOOR_11_WORKSHEET_ID, 'label': 'sci_floor_11' },
+                    {'id': settings_app.SCI_FLOOR_12_WORKSHEET_ID, 'label': 'sci_floor_12' },
+                    {'id': settings_app.SCI_FLOOR_13_WORKSHEET_ID, 'label': 'sci_floor_13' },
                 ]
             },
             {
                 'location_code': 'rock-chinese',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_ids': [
-                    settings_app.CHINESE_WORKSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.CHINESE_WORKSHEET_ID, 'label': 'rock_chinese' },
                 ]
             },
             {
                 'location_code': 'rock-japanese',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_ids': [
-                    settings_app.JAPANESE_WORKSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.JAPANESE_WORKSHEET_ID, 'label': 'rock_japanese' },
                 ]
             },
             {
                 'location_code': 'rock-korean',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_ids': [
-                    settings_app.KOREAN_WORKSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.KOREAN_WORKSHEET_ID, 'label': 'rock_korean' },
                 ]
             },
         ]
         return raw_groups
+
+    # def prepare_groups( self ):
+    #     """ Populates Indexer.groups on instantiation.
+    #         Called by __init__() """
+    #     log.debug( 'starting prepare_groups()' )
+    #     raw_groups = [
+    #         {
+    #             'location_code': 'rock',
+    #             'spreadsheet_id': settings_app.ROCK_GENERAL_SPREADSHEET_ID,
+    #             'worksheet_ids': [
+    #                 settings_app.ROCK_GENERAL_FLOOR_A_WORKSHEET_ID,
+    #                 settings_app.ROCK_GENERAL_FLOOR_B_WORKSHEET_ID,
+    #                 settings_app.ROCK_GENERAL_FLOOR_2_WORKSHEET_ID,
+    #                 settings_app.ROCK_GENERAL_FLOOR_3_WORKSHEET_ID,
+    #                 settings_app.ROCK_GENERAL_FLOOR_4_WORKSHEET_ID,
+    #             ]
+    #         },
+    #         {
+    #             'location_code': 'sci',
+    #             'spreadsheet_id': settings_app.SCI_SPREADSHEET_ID,
+    #             'worksheet_ids': [
+    #                 settings_app.SCI_FLOOR_11_WORKSHEET_ID,
+    #                 settings_app.SCI_FLOOR_12_WORKSHEET_ID,
+    #                 settings_app.SCI_FLOOR_13_WORKSHEET_ID,
+    #             ]
+    #         },
+    #         {
+    #             'location_code': 'rock-chinese',
+    #             'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+    #             'worksheet_ids': [
+    #                 settings_app.CHINESE_WORKSHEET_ID,
+    #             ]
+    #         },
+    #         {
+    #             'location_code': 'rock-japanese',
+    #             'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+    #             'worksheet_ids': [
+    #                 settings_app.JAPANESE_WORKSHEET_ID,
+    #             ]
+    #         },
+    #         {
+    #             'location_code': 'rock-korean',
+    #             'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+    #             'worksheet_ids': [
+    #                 settings_app.KOREAN_WORKSHEET_ID,
+    #             ]
+    #         },
+    #     ]
+    #     return raw_groups
 
     ## end class Indexer()
 

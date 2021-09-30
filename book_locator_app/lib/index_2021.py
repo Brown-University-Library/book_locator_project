@@ -25,21 +25,6 @@ log = logging.getLogger( 'book_locator_indexer' )
 log.info( '\n\nstarting index_2021.py...' )
 
 
-## Row ------------------------------------------
-
-# class Row():
-
-#     def __init__( self ):
-#         log.debug( 'starting Row.__init__()' )
-#         self.aisle = ''
-#         self.begin = ''
-#         self.end = ''
-#         self.floor = ''
-#         self.location_code = ''
-
-#     ## end class Row()
-
-
 ## Indexer --------------------------------------
 
 class Indexer():
@@ -61,6 +46,119 @@ class Indexer():
         self.japanese_data = {}
         self.korean_data = {}
 
+    ## run on __init__() ------------------------
+
+    def prepare_groups( self ):
+        """ Populates Indexer.groups on instantiation.
+            Called by __init__() """
+        log.debug( 'starting prepare_groups()' )
+        raw_groups = [
+            {
+                'location_code': 'rock',
+                'spreadsheet_id': settings_app.ROCK_GENERAL_SPREADSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_A_WORKSHEET_ID, 'label': 'rock_general_floor_a' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_B_WORKSHEET_ID, 'label': 'rock_general_floor_b' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_2_WORKSHEET_ID, 'label': 'rock_general_floor_2' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_3_WORKSHEET_ID, 'label': 'rock_general_floor_3' },
+                    {'id': settings_app.ROCK_GENERAL_FLOOR_4_WORKSHEET_ID, 'label': 'rock_general_floor_4' }
+                ]
+            },
+            {
+                'location_code': 'sci',
+                'spreadsheet_id': settings_app.SCI_SPREADSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.SCI_FLOOR_11_WORKSHEET_ID, 'label': 'sci_floor_11' },
+                    {'id': settings_app.SCI_FLOOR_12_WORKSHEET_ID, 'label': 'sci_floor_12' },
+                    {'id': settings_app.SCI_FLOOR_13_WORKSHEET_ID, 'label': 'sci_floor_13' },
+                ]
+            },
+            {
+                'location_code': 'rock_chinese',
+                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.CHINESE_WORKSHEET_ID, 'label': 'rock_chinese' },
+                ]
+            },
+            {
+                'location_code': 'rock_japanese',
+                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.JAPANESE_WORKSHEET_ID, 'label': 'rock_japanese' },
+                ]
+            },
+            {
+                'location_code': 'rock_korean',
+                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
+                'worksheet_info': [
+                    {'id': settings_app.KOREAN_WORKSHEET_ID, 'label': 'rock_korean' },
+                ]
+            },
+        ]
+        return raw_groups
+
+    def prepare_spreadsheet_urls( self, raw_groups ):
+        """ Populates Indexer.spreadsheet_urls on instantiation.
+            Creates a list of spreadsheet-url info, with each element of the list having the structure...
+            {
+                'group_json_urls': [
+                    {'worksheet_label': 'rock_general_floor_a', 'worksheet_url': 'https://worksheet-url'},
+                    {'worksheet_label': 'rock_general_floor_b', 'worksheet_url': 'https://worksheet-url'},
+                    {'worksheet_label': 'rock_general_floor_2',  'worksheet_url': 'https://worksheet-url'},
+                    etc.
+                    ],
+                'location_code': 'rock'
+            },
+            Called by __init__() """
+        log.debug( 'starting prepare_spreadsheet_urls()' )
+        assert type( raw_groups ) == list
+        log.debug( f'raw_groups, ``{pprint.pformat(raw_groups)}``' )
+        spreadsheet_group_json_urls = []
+        for group in raw_groups:
+            assert type(group) == dict
+            worksheet_info_lst = []
+            spreadsheet_id = group['spreadsheet_id']
+            for worksheet_data_dct in group['worksheet_info']:
+                worksheet_id = worksheet_data_dct['id']
+                worksheet_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq?tqx=out:json&gid={worksheet_id}'
+                worksheet_info_dct = { 'worksheet_url': worksheet_url, 'worksheet_label': worksheet_data_dct['label'] }
+                worksheet_info_lst.append( worksheet_info_dct )
+            dct = {
+                'location_code': group['location_code'],
+                'group_json_urls': worksheet_info_lst
+            }
+            spreadsheet_group_json_urls.append( dct )
+        return spreadsheet_group_json_urls
+
+    ## managers ---------------------------------
+
+    def process_worksheet_urls( self ):
+        """ Loops through worksheet urls.
+            Called by main() """
+        log.debug( 'starting process_worksheet_urls()' )
+        assert type( self.spreadsheet_group_json_urls ) == list
+        log.debug( f'self.spreadsheet_group_json_urls, ``{pprint.pformat(self.spreadsheet_group_json_urls)}``' )
+        for spreadsheet_info in self.spreadsheet_group_json_urls:
+            assert type( spreadsheet_info ) == dict
+            for worksheet_info in spreadsheet_info['group_json_urls']:
+                assert type( worksheet_info ) == dict
+                log.debug( f'worksheet_info, ``{worksheet_info}``' )
+                ( label, url ) = ( worksheet_info['worksheet_label'], worksheet_info['worksheet_url'] )
+                self.process_worksheet_url( label, url )
+        return
+
+    def process_worksheet_url( self, label, url ):
+        """ Manages processing of single worksheet.
+            Called by process_worksheet_urls() """
+        log.debug( 'starting process_worksheet_url()' )
+        log.debug( f'label, ``{label}``; url, ``{url}``' )
+        assert type( label ) == str
+        assert type( url ) == str
+        pass
+        1/0
+
+    ## misc ---
+
     def access_worksheet_json( self ):
         """ Manages spreadsheet queries to gather raw json-data.
             Called by main() """
@@ -81,6 +179,7 @@ class Indexer():
         # log.debug( f'raw_json_data, ``{raw_json_data}``' )
         assert type( raw_json_data ) == list
         return raw_json_data
+
 
     def organize_json( self ):
         """ Converts self.all_raw_json_data list-data into row-data for each spreadsheet.
@@ -190,77 +289,7 @@ class Indexer():
     #         spreadsheet_group_json_urls.append( dct )
     #     return spreadsheet_group_json_urls
 
-    def prepare_spreadsheet_urls( self, raw_groups ):
-        """ Populates Indexer.spreadsheet_urls on instantiation.
-            Called by __init__() """
-        log.debug( 'starting prepare_spreadsheet_urls()' )
-        assert type( raw_groups ) == list
-        log.debug( f'raw_groups, ``{pprint.pformat(raw_groups)}``' )
-        spreadsheet_group_json_urls = []
-        for group in raw_groups:
-            assert type(group) == dict
-            worksheet_info_lst = []
-            spreadsheet_id = group['spreadsheet_id']
-            for worksheet_data_dct in group['worksheet_info']:
-                worksheet_id = worksheet_data_dct['id']
-                worksheet_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq?tqx=out:json&gid={worksheet_id}'
-                worksheet_info_dct = { 'worksheet_url': worksheet_url, 'worksheet_label': worksheet_data_dct['label'] }
-                worksheet_info_lst.append( worksheet_info_dct )
-            dct = {
-                'location_code': group['location_code'],
-                'group_json_urls': worksheet_info_lst
-            }
-            spreadsheet_group_json_urls.append( dct )
-        return spreadsheet_group_json_urls
 
-    def prepare_groups( self ):
-        """ Populates Indexer.groups on instantiation.
-            Called by __init__() """
-        log.debug( 'starting prepare_groups()' )
-        raw_groups = [
-            {
-                'location_code': 'rock',
-                'spreadsheet_id': settings_app.ROCK_GENERAL_SPREADSHEET_ID,
-                'worksheet_info': [
-                    {'id': settings_app.ROCK_GENERAL_FLOOR_A_WORKSHEET_ID, 'label': 'rock_general_floor_a' },
-                    {'id': settings_app.ROCK_GENERAL_FLOOR_B_WORKSHEET_ID, 'label': 'rock_general_floor_b' },
-                    {'id': settings_app.ROCK_GENERAL_FLOOR_2_WORKSHEET_ID, 'label': 'rock_general_floor_2' },
-                    {'id': settings_app.ROCK_GENERAL_FLOOR_3_WORKSHEET_ID, 'label': 'rock_general_floor_3' },
-                    {'id': settings_app.ROCK_GENERAL_FLOOR_4_WORKSHEET_ID, 'label': 'rock_general_floor_4' }
-                ]
-            },
-            {
-                'location_code': 'sci',
-                'spreadsheet_id': settings_app.SCI_SPREADSHEET_ID,
-                'worksheet_info': [
-                    {'id': settings_app.SCI_FLOOR_11_WORKSHEET_ID, 'label': 'sci_floor_11' },
-                    {'id': settings_app.SCI_FLOOR_12_WORKSHEET_ID, 'label': 'sci_floor_12' },
-                    {'id': settings_app.SCI_FLOOR_13_WORKSHEET_ID, 'label': 'sci_floor_13' },
-                ]
-            },
-            {
-                'location_code': 'rock_chinese',
-                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_info': [
-                    {'id': settings_app.CHINESE_WORKSHEET_ID, 'label': 'rock_chinese' },
-                ]
-            },
-            {
-                'location_code': 'rock_japanese',
-                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_info': [
-                    {'id': settings_app.JAPANESE_WORKSHEET_ID, 'label': 'rock_japanese' },
-                ]
-            },
-            {
-                'location_code': 'rock_korean',
-                'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
-                'worksheet_info': [
-                    {'id': settings_app.KOREAN_WORKSHEET_ID, 'label': 'rock_korean' },
-                ]
-            },
-        ]
-        return raw_groups
 
     # def prepare_groups( self ):
     #     """ Populates Indexer.groups on instantiation.
@@ -319,9 +348,9 @@ class Indexer():
 def main():
     log.debug( 'starting `def main()`' )
     indexer = Indexer()
-    log.debug( f'indexer.spreadsheet_group_json_urls, ``{pprint.pformat(indexer.spreadsheet_group_json_urls)}``' )
-    indexer.all_raw_json_data = indexer.access_worksheet_json()
-    indexer.all_worksheet_data = indexer.organize_json()
+    indexer.process_worksheet_urls()
+    # indexer.all_raw_json_data = indexer.access_worksheet_json()
+    # indexer.all_worksheet_data = indexer.organize_json()
     # indexer.populate_worksheet_data()
 
 if __name__ == "__main__":

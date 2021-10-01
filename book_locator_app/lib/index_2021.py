@@ -167,10 +167,13 @@ class Indexer():
         ( jsn_dct, err ) = ( None, None )
         try:
             log.debug( f'querying worksheet, ``{label}``' )
+            log.debug( f'querying worksheet_url, ``{worksheet_url}``' )
             assert type( worksheet_url ) == str
             assert type( label ) == str
             r = requests.get( worksheet_url )
             content = r.content.decode( 'utf-8' )
+            if label == 'sci_floor_11':
+                log.debug( f'r.content, ``{r.content}``' )
             start_string = 'Query.setResponse('
             start_position = content.find( start_string ) + len( start_string )
             end_position = len( ');' )
@@ -180,13 +183,16 @@ class Indexer():
             assert type( jsn_dct ) == dict
             return jsn_dct
         except:
+            err = f'Problem querying spreaadsheet, ``{label}``'
+            log.exception( err )
+        return ( jsn_dct, err )
 
     def create_row_data( self, raw_data_dct, label ):
         """ Converts self.all_raw_json_data list-data into row-data for each spreadsheet.
             Called by main() """
         log.debug( 'starting create_row_data()' )
         log.debug( f'creating row-data from raw-data from worksheet, ``{label}``' )
-        log.debug( f'TEMP- raw_data_dct, ``{pprint.pformat(raw_data_dct)}``' )
+        # log.debug( f'TEMP- raw_data_dct, ``{pprint.pformat(raw_data_dct)}``' )
         assert type( raw_data_dct ) == dict
         assert type( label ) == str
         log.debug( f'raw_data_dct.keys(), ``{pprint.pformat(raw_data_dct.keys())}``' )
@@ -200,24 +206,31 @@ class Indexer():
         for row in table['rows']:
             cells = row['c']
             first_cell_data = cells[0]['v']
-            log.debug( f'first_cell_data, ``{first_cell_data}``' )
-            if first_cell_data == 'aisle':
+            # log.debug( f'first_cell_data, ``{first_cell_data}``' )
+            if first_cell_data == 'aisle':  # this skips 2 header-rows
                 continue
             row_dct = {
                 'aisle': '', 'begin': '', 'end': '', 'floor': '', 'location_code': '' }
             for ( i, cell ) in enumerate( cells ):
                 if i == 0:
+                    assert type( cell['v'] ) == str, type( cell['v'] )
                     row_dct['aisle'] = cell['v'].strip()
                 elif i == 1:
+                    assert type( cell['v'] ) == str, type( cell['v'] )
                     row_dct['begin'] = cell['v'].strip()
                 elif i == 2:
-                    row_dct['end'] = cell['v'].strip()         # /floor/location_code
+                    assert type( cell['v'] ) == str, type( cell['v'] )
+                    row_dct['end'] = cell['v'].strip()
                 elif i == 3:
-                    try:
-                        row_dct['floor'] = cell['f'].strip()
-                    except:
-                        row_dct['floor'] = cell['v'].strip()
+                    # log.debug( f'cell.keys(), ``{cell.keys()}``' )
+                    if 'f' in cell.keys():
+                        assert type(cell['f']) == str, type(cell['f'])
+                        row_dct['floor'] = cell['f']
+                    elif 'v' in cell.keys():
+                        assert type(cell['v']) == str, type(cell['v'])
+                        row_dct['floor'] = cell['v']
                 elif i == 4:
+                    assert type( cell['v'] ) == str, type( cell['v'] )
                     row_dct['location_code'] = cell['v'].strip()
                 elif i > 4:
                     break
@@ -234,99 +247,6 @@ class Indexer():
         log.debug( f'would be handling processing of worksheet, ``{label}``' )
         pass
         return
-
-    # def organize_json( self ):
-    #     """ Converts self.all_raw_json_data list-data into row-data for each spreadsheet.
-    #         Called by main() """
-    #     log.debug( 'starting organize_json()' )
-    #     # log.debug( f'self.all_raw_json_data, ``{pprint.pformat(self.all_raw_json_data)}``' )
-    #     # 1/0
-    #     assert type( self.all_raw_json_data ) == list
-    #     for worksheet in self.all_raw_json_data:
-    #         assert type( worksheet ) == dict
-    #         log.debug( f'processing worksheet, ``{pprint.pformat(worksheet)}...``' )
-    #         log.debug( f'worksheet.keys(), ``{pprint.pformat(worksheet.keys())}``' )
-    #         log.debug( f'worksheet["table"], ``{worksheet["table"]}``' )
-    #         # 1/0
-    #         table = worksheet['table']
-    #         assert type( table ) == dict
-    #         log.debug( f'table-keys, ``{pprint.pformat(table.keys())}``' )
-    #         # 1/0
-    #         second_row_table_identifier = table['rows'][2]
-    #         log.debug( f'processing table containing, ``{second_row_table_identifier}``' )
-    #         row_list = []
-    #         for row in table['rows']:
-    #             cells = row['c']
-    #             first_cell_data = cells[0]['v']
-    #             log.debug( f'first_cell_data, ``{first_cell_data}``' )
-    #             if first_cell_data == 'aisle':
-    #                 continue
-    #             row_dct = {
-    #                 'aisle': '', 'begin': '', 'end': '', 'floor': '', 'location_code': '' }
-    #             for ( i, cell ) in enumerate( cells ):
-    #                 if i == 0:
-    #                     row_dct['aisle'] = cell['v']
-    #                 elif i == 1:
-    #                     row_dct['begin'] = cell['v']
-    #                 elif i == 2:
-    #                     row_dct['end'] = cell['v']         # /floor/location_code
-    #                 elif i == 3:
-    #                     try:
-    #                         row_dct['floor'] = cell['f']
-    #                     except:
-    #                         row_dct['floor'] = cell['v']
-    #                 elif i == 4:
-    #                     row_dct['location_code'] = cell['v']
-    #                 elif i > 4:
-    #                     break
-    #             row_list.append( row_dct )
-    #         last_entry = row_list[-1]
-    #         if last_entry['location_code'].strip() == 'rock':
-    #             if last_entry['floor'].strip() == 'A':
-    #                 self.rock_general_floor_a_data = row_list
-    #             elif last_entry['floor'].strip() == 'B':
-    #                 self.rock_general_floor_b_data = row_list
-    #             elif last_entry['floor'].strip() == '2':
-    #                 self.rock_general_floor_2_data = row_list
-    #             elif last_entry['floor'].strip() == '3':
-    #                 self.rock_general_floor_3_data = row_list
-    #             elif last_entry['floor'].strip() == '4':
-    #                 self.rock_general_floor_4_data = row_list
-    #         elif last_entry['location_code'].strip() == 'sci':
-    #             if last_entry['floor'].strip() == '11':
-    #                 self.sci_general_floor_11_data = row_list
-    #             elif last_entry['floor'].strip() == '12':
-    #                 self.sci_general_floor_12_data = row_list
-    #             elif last_entry['floor'].strip() == '13':
-    #                 self.sci_general_floor_13_data = row_list
-    #         elif last_entry['location_code'].strip() == 'rock chinese':
-    #             self.chinese_data = row_list
-    #         elif last_entry['location_code'].strip() == 'rock japanese':
-    #             self.japanese_data = row_list
-    #         elif last_entry['location_code'].strip() == 'rock korean':
-    #             self.korean_data = row_list
-    #     log.debug( f'self.rock_general_floor_a_data, ``{pprint.pformat(self.rock_general_floor_a_data)}``' )
-    #     ## end def organize_json()
-
-    # def access_worksheet_json( self ):
-    #     """ Manages spreadsheet queries to gather raw json-data.
-    #         Called by main() """
-    #     log.debug( 'starting access_worksheet_json()' )
-    #     raw_json_data = []
-    #     for entry in self.spreadsheet_group_json_urls:
-    #         log.debug( f'entry, ``{pprint.pformat(entry)}``' )
-    #         assert type(entry) == dict
-    #         log.debug( f'processing worksheet urls for `location_code`, ``{entry["location_code"]}``' )
-    #         worksheet_urls = entry['group_json_urls']
-    #         for worksheet_url in worksheet_urls:
-    #             assert type(worksheet_url) == str
-    #             jsn_dct = self.query_spreadsheet( worksheet_url )
-    #             jsn_dct['queried_url'] = worksheet_url
-    #             raw_json_data.append( jsn_dct )
-    #         break
-    #     # log.debug( f'raw_json_data, ``{raw_json_data}``' )
-    #     assert type( raw_json_data ) == list
-    #     return raw_json_data
 
     ## end class Indexer()
 

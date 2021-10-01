@@ -33,18 +33,17 @@ class Indexer():
         log.debug( 'starting Indexer.__init__()' )
         self.raw_groups = self.prepare_groups()
         self.spreadsheet_group_json_urls = self.prepare_spreadsheet_urls( self.raw_groups )
-        self.all_raw_json_data = []
-        self.rock_general_floor_a_data = {}
-        self.rock_general_floor_b_data = {}
-        self.rock_general_floor_2_data = {}
-        self.rock_general_floor_3_data = {}
-        self.rock_general_floor_4_data = {}
-        self.sci_floor_11_data = {}
-        self.sci_floor_12_data = {}
-        self.sci_floor_13_data = {}
-        self.chinese_data = {}
-        self.japanese_data = {}
-        self.korean_data = {}
+        # self.rock_general_floor_a_data = {}
+        # self.rock_general_floor_b_data = {}
+        # self.rock_general_floor_2_data = {}
+        # self.rock_general_floor_3_data = {}
+        # self.rock_general_floor_4_data = {}
+        # self.sci_floor_11_data = {}
+        # self.sci_floor_12_data = {}
+        # self.sci_floor_13_data = {}
+        # self.chinese_data = {}
+        # self.japanese_data = {}
+        # self.korean_data = {}
 
     ## run on __init__() ------------------------
 
@@ -144,20 +143,22 @@ class Indexer():
                 assert type( worksheet_info ) == dict
                 log.debug( f'worksheet_info, ``{worksheet_info}``' )
                 ( label, url ) = ( worksheet_info['worksheet_label'], worksheet_info['worksheet_url'] )
-                self.process_worksheet_url( label, url )
+                self.process_worksheet_url( url, label )
         return
 
-    def process_worksheet_url( self, label, url ):
+    def process_worksheet_url( self, url, label ):
         """ Manages processing of single worksheet.
             Called by process_worksheet_urls() """
         log.debug( 'starting process_worksheet_url()' )
         log.debug( f'label, ``{label}``; url, ``{url}``' )
         assert type( label ) == str
         assert type( url ) == str
-        pass
+        raw_data = self.access_worksheet_json( url, label )
+        row_data = self.organize_json( raw_data, label )
+        self.continue_regularly_scheduled_programming( row_data )  # hand off to previous code
         1/0
 
-    ## misc ---
+    ## meat -------------------------------------
 
     def access_worksheet_json( self ):
         """ Manages spreadsheet queries to gather raw json-data.

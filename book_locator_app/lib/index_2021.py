@@ -156,14 +156,13 @@ class Indexer():
         raw_data_dct = self.query_spreadsheet( url, label )
         row_list = self.create_row_data( raw_data_dct, label )
         self.continue_regularly_scheduled_programming( row_list, label )  # hand off to previous code
-        # 1/0
         return
 
     ## meat -------------------------------------
 
     def query_spreadsheet( self, worksheet_url, label ):
         """ Queries spreadsheet.
-            Called by access_worksheet_json() """
+            Called by process_worksheet_url() """
         ( jsn_dct, err ) = ( None, None )
         try:
             log.debug( f'querying worksheet, ``{label}``' )
@@ -189,10 +188,11 @@ class Indexer():
 
     def create_row_data( self, raw_data_dct, label ):
         """ Converts self.all_raw_json_data list-data into row-data for each spreadsheet.
-            Called by main() """
+            Called by process_worksheet_url() """
         log.debug( 'starting create_row_data()' )
         log.debug( f'creating row-data from raw-data from worksheet, ``{label}``' )
-        # log.debug( f'TEMP- raw_data_dct, ``{pprint.pformat(raw_data_dct)}``' )
+        # if 'rock_general' in label:
+        #     log.debug( f'TEMP- raw_data_dct, ``{pprint.pformat(raw_data_dct)}``' )
         assert type( raw_data_dct ) == dict
         assert type( label ) == str
         log.debug( f'raw_data_dct.keys(), ``{pprint.pformat(raw_data_dct.keys())}``' )

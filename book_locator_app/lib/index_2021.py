@@ -137,16 +137,25 @@ class Indexer():
         log.debug( 'starting process_worksheet_urls()' )
         assert type( self.spreadsheet_group_json_urls ) == list
         log.debug( f'self.spreadsheet_group_json_urls, ``{pprint.pformat(self.spreadsheet_group_json_urls)}``' )
+
+        locate_index = {}       # holder for all worksheet data
+        range_start_list = []   # holder for all worksheet data
+
         for spreadsheet_info in self.spreadsheet_group_json_urls:
             assert type( spreadsheet_info ) == dict
             for worksheet_info in spreadsheet_info['group_json_urls']:
                 assert type( worksheet_info ) == dict
                 log.debug( f'worksheet_info, ``{worksheet_info}``' )
                 ( label, url ) = ( worksheet_info['worksheet_label'], worksheet_info['worksheet_url'] )
-                self.process_worksheet_url( url, label )
+                # self.process_worksheet_url( url, label )
+                self.process_worksheet_url( url, label, locate_index, range_start_list )
+                break  # TEMP
+            break  # TEMP
+        log.debug( f'range_start_list, ``{range_start_list}``' )
         return
 
-    def process_worksheet_url( self, url, label ):
+    # def process_worksheet_url( self, url, label ):
+    def process_worksheet_url( self, url, label, locate_index, range_start_list ):
         """ Manages processing of single worksheet.
             Called by process_worksheet_urls() """
         log.debug( 'starting process_worksheet_url()' )
@@ -155,7 +164,8 @@ class Indexer():
         assert type( url ) == str
         raw_data_dct = self.query_spreadsheet( url, label )
         row_list = self.create_row_data( raw_data_dct, label )
-        self.continue_regularly_scheduled_programming( row_list, label )  # hand off to previous code
+        # self.index_worksheet_data( row_list, label )  # hand off to previous code
+        self.index_worksheet_data( row_list, label, locate_index, range_start_list )  # hand off to previous code
         return
 
     ## meat -------------------------------------
@@ -240,12 +250,28 @@ class Indexer():
         return row_list
         ## end def create_row_data()
 
-    def continue_regularly_scheduled_programming( self, row_list, label ):
-        """ temporary place-holder
+    # def index_worksheet_data( self, row_list, label ):
+    def index_worksheet_data( self, row_list, label, locate_index_reference, range_start_list_reference ):
+        """ For each row in the worksheet's data...
+            - makes a copy of the row-data
+            - gets the 'begin' element
+            - gets the normalized-begin-element
+            - appends the normalized-begin-element to a list (no sorting yet)
+            - adds the normalized-begin-element to the copy of the row-data
+            - creates an index entry with the key of normalized-begin, and the value of of the updated row-data
             Called by process_worksheet_url() """
-        log.debug( 'starting temporary continue_regularly_scheduled_programming()' )
+        log.debug( 'starting index_worksheet_data()' )
         log.debug( f'would be handling processing of worksheet, ``{label}``' )
-        pass
+        assert type( row_list ) == list
+        assert type( label ) == str
+        assert type( locate_index_reference ) == dict
+        log.debug( f'initial locate_index_reference, ``{pprint.pformat(locate_index_reference)}``' )
+        log.debug( f'initial range_start_list_reference, ``{range_start_list_reference}``' )
+        assert type( range_start_list_reference) == list
+        for row in row_list:
+            assert type( row ) == dict
+            aisle_meta = row.copy()
+            range_start_list_reference.append( 'foo' )
         return
 
     ## end class Indexer()

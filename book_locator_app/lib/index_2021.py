@@ -10,6 +10,7 @@ from book_locator_app import settings_app  # requires above path to be set
 
 import json, logging, pprint
 import requests
+from book_locator_app.lib.normalizer import Item
 
 
 ## rest of setup --------------------------------
@@ -271,8 +272,46 @@ class Indexer():
         for row in row_list:
             assert type( row ) == dict
             aisle_meta = row.copy()
+            begin = self.get_begin( row )
+            if begin is None:
+                log.warning("No begin range")
+                continue
+            normalized_range_start = self.build_item( row['location_code'], begin )
             range_start_list_reference.append( 'foo' )
         return
+
+    def get_begin( self, row ):
+        """ Returns None rather than an empty string.
+            Called by index_worksheet_data() """
+        assert type( row ) == dict
+        val = row.get( 'begin', None )
+        if val is None:
+            return_val = None
+        elif val.strip() == '':
+            return_val = None
+        else:
+            return_val = val
+        log.debug( f'return_val, `{return_val}`' )
+        return return_val
+
+    def build_item( self, location, begin_callnumber ):
+        """ Returns normalized-callnumber
+            Called by index_worksheet_data() """
+        log.debug( 'starting build_item()' )
+        log.debug( f'location, ``{location}; begin_callnumber, ``{begin_callnumber}``' )
+        assert type( location ) == str
+        assert type( begin_callnumber ) == str
+        item = Item( begin_callnumber, location )
+        normalized_callnumber = None
+        try:
+            normalized_callnumber = item.normalize()
+            log.debug( 'callnumber normalized' )
+        except:
+            log.exception( 'could not normalize' )
+        if normalized_callnumber is None:
+            log.warning( 'normalized_callnumber is None' )
+        log.debug( f'returning normalized_callnumber, ``{normalized_callnumber}``' )
+        return normalized_callnumber
 
     ## end class Indexer()
 

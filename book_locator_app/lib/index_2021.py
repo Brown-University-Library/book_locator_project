@@ -150,10 +150,13 @@ class Indexer():
                 ( label, url ) = ( worksheet_info['worksheet_label'], worksheet_info['worksheet_url'] )
                 # self.process_worksheet_url( url, label )
                 self.process_worksheet_url( url, label, locate_index, range_start_list )
-                break  # TEMP
-            break  # TEMP
+                # break  # TEMP
+            # break  # TEMP
         log.debug( f'locate_index, ``{pprint.pformat(locate_index)}``' )
         log.debug( f'range_start_list, ``{pprint.pformat(range_start_list)}``' )
+
+        self.save_data( locate_index, range_start_list )
+
         return
 
     # def process_worksheet_url( self, url, label ):
@@ -164,10 +167,29 @@ class Indexer():
         log.debug( f'label, ``{label}``; url, ``{url}``' )
         assert type( label ) == str
         assert type( url ) == str
+        assert type( locate_index ) = dict
+        assert type( range_start_list ) == list
         raw_data_dct = self.query_spreadsheet( url, label )
         row_list = self.create_row_data( raw_data_dct, label )
         # self.index_worksheet_data( row_list, label )  # hand off to previous code
         self.index_worksheet_data( row_list, label, locate_index, range_start_list )  # hand off to previous code
+        return
+
+    def save_data( self, locate_index, range_start_list ):
+        """ Writes indexed data to disk, for use by webapp.
+            Called by process_worksheet_urls() """
+        assert type( locate_index ) = dict
+        assert type( range_start_list ) == list
+        ## save index-dict to disk...
+        ld = LocateData(location_code, meta=True)
+        ld.dump(locate_index)
+        log.debug( 'index-dict data saved' )
+        ## save normalized-callnumber-list to disk (used for 'bisect', to get key for index-dict lookup )
+        filtered_range_start_list = [ x for x in range_start_list if x ]  # removes None elements before sorting
+        filtered_range_start_list.sort()
+        ld = LocateData(location_code, index=True)
+        ld.dump( filtered_range_start_list )
+        log.debug( 'index-normalized-callnumber-list data saved' )
         return
 
     ## meat -------------------------------------

@@ -152,7 +152,8 @@ class Indexer():
                 self.process_worksheet_url( url, label, locate_index, range_start_list )
                 break  # TEMP
             break  # TEMP
-        log.debug( f'range_start_list, ``{range_start_list}``' )
+        log.debug( f'locate_index, ``{pprint.pformat(locate_index)}``' )
+        log.debug( f'range_start_list, ``{pprint.pformat(range_start_list)}``' )
         return
 
     # def process_worksheet_url( self, url, label ):
@@ -277,7 +278,10 @@ class Indexer():
                 log.warning("No begin range")
                 continue
             normalized_range_start = self.build_item( row['location_code'], begin )
-            range_start_list_reference.append( 'foo' )
+            range_start_list_reference.append( normalized_range_start )
+
+            aisle_meta['normalized_start'] = normalized_range_start
+            locate_index_reference[normalized_range_start] = aisle_meta
         return
 
     def get_begin( self, row ):

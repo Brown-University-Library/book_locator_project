@@ -10,6 +10,7 @@ from book_locator_app import settings_app  # requires above path to be set
 
 import json, logging, pprint
 import requests
+from book_locator_app.lib.locator import LocateData
 from book_locator_app.lib.normalizer import Item
 
 
@@ -74,21 +75,21 @@ class Indexer():
                 ]
             },
             {
-                'location_code': 'rock_chinese',
+                'location_code': 'rock-chinese',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
                 'worksheet_info': [
                     {'id': settings_app.CHINESE_WORKSHEET_ID, 'label': 'rock_chinese' },
                 ]
             },
             {
-                'location_code': 'rock_japanese',
+                'location_code': 'rock-japanese',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
                 'worksheet_info': [
                     {'id': settings_app.JAPANESE_WORKSHEET_ID, 'label': 'rock_japanese' },
                 ]
             },
             {
-                'location_code': 'rock_korean',
+                'location_code': 'rock-korean',
                 'spreadsheet_id': settings_app.ROCK_CJK_SPREADSHEET_ID,
                 'worksheet_info': [
                     {'id': settings_app.KOREAN_WORKSHEET_ID, 'label': 'rock_korean' },
@@ -118,10 +119,15 @@ class Indexer():
             assert type(group) == dict
             worksheet_info_lst = []
             spreadsheet_id = group['spreadsheet_id']
+            # location_code = group['location_code']
             for worksheet_data_dct in group['worksheet_info']:
                 worksheet_id = worksheet_data_dct['id']
                 worksheet_url = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq?tqx=out:json&gid={worksheet_id}'
-                worksheet_info_dct = { 'worksheet_url': worksheet_url, 'worksheet_label': worksheet_data_dct['label'] }
+                worksheet_info_dct = {
+                    'worksheet_url': worksheet_url,
+                    'worksheet_label': worksheet_data_dct['label'],
+                    # 'spreadsheet_location_code': location_code
+                    }
                 worksheet_info_lst.append( worksheet_info_dct )
             dct = {
                 'location_code': group['location_code'],
@@ -138,12 +144,14 @@ class Indexer():
         log.debug( 'starting process_worksheet_urls()' )
         assert type( self.spreadsheet_group_json_urls ) == list
         log.debug( f'self.spreadsheet_group_json_urls, ``{pprint.pformat(self.spreadsheet_group_json_urls)}``' )
-
-        locate_index = {}       # holder for all worksheet data
-        range_start_list = []   # holder for all worksheet data
-
+        ## process spreadsheets
         for spreadsheet_info in self.spreadsheet_group_json_urls:
             assert type( spreadsheet_info ) == dict
+            log.debug( f'spreadsheet_info, ``{pprint.pformat(spreadsheet_info)}``' )
+            locate_index = {}       # holder for all spreadsheet dict-data
+            range_start_list = []   # holder for all spreadsheet normalized-callnumber-list data
+            location_code = spreadsheet_info['location_code']
+            ## process worksheets
             for worksheet_info in spreadsheet_info['group_json_urls']:
                 assert type( worksheet_info ) == dict
                 log.debug( f'worksheet_info, ``{worksheet_info}``' )
@@ -151,12 +159,10 @@ class Indexer():
                 # self.process_worksheet_url( url, label )
                 self.process_worksheet_url( url, label, locate_index, range_start_list )
                 # break  # TEMP
+            log.debug( f'locate_index, ``{pprint.pformat(locate_index)}``' )
+            log.debug( f'range_start_list (not-normalized), ``{pprint.pformat(range_start_list)}``' )
+            self.save_data( location_code, locate_index, range_start_list )
             # break  # TEMP
-        log.debug( f'locate_index, ``{pprint.pformat(locate_index)}``' )
-        log.debug( f'range_start_list, ``{pprint.pformat(range_start_list)}``' )
-
-        self.save_data( locate_index, range_start_list )
-
         return
 
     # def process_worksheet_url( self, url, label ):
@@ -167,7 +173,7 @@ class Indexer():
         log.debug( f'label, ``{label}``; url, ``{url}``' )
         assert type( label ) == str
         assert type( url ) == str
-        assert type( locate_index ) = dict
+        assert type( locate_index ) == dict
         assert type( range_start_list ) == list
         raw_data_dct = self.query_spreadsheet( url, label )
         row_list = self.create_row_data( raw_data_dct, label )
@@ -175,14 +181,14 @@ class Indexer():
         self.index_worksheet_data( row_list, label, locate_index, range_start_list )  # hand off to previous code
         return
 
-    def save_data( self, locate_index, range_start_list ):
+    def save_data( self, location_code, locate_index, range_start_list ):
         """ Writes indexed data to disk, for use by webapp.
             Called by process_worksheet_urls() """
-        assert type( locate_index ) = dict
+        assert type( locate_index ) == dict
         assert type( range_start_list ) == list
         ## save index-dict to disk...
-        ld = LocateData(location_code, meta=True)
-        ld.dump(locate_index)
+        ld = LocateData( location_code, meta=True )
+        ld.dump( locate_index )
         log.debug( 'index-dict data saved' )
         ## save normalized-callnumber-list to disk (used for 'bisect', to get key for index-dict lookup )
         filtered_range_start_list = [ x for x in range_start_list if x ]  # removes None elements before sorting

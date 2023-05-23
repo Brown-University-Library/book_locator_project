@@ -2,7 +2,7 @@
 Django==1.11.29
 git+https://github.com/birkin/shellvars-py.git
 PyMySQL==1.0.2
-requests==2.25.1
+requests==2.31.0
 
 ## indexer
 oauth2client==4.1.3
